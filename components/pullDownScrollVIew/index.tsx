@@ -1,5 +1,12 @@
 import React, { PropsWithChildren } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -15,17 +22,17 @@ import Animated, {
 
 type PullDownScrollViewProps = {
   isRefreshing?: boolean;
-  onRefresh: () => void;
+  onRefresh: () => void; // Required prop
 };
 
 const MAX = 100;
 const FRICTION_RATIO = 0.52;
 
-const PullDownScrollView = ({
-  children,
-  onRefresh = () => {},
-  isRefreshing = false,
-}: PropsWithChildren<PullDownScrollViewProps>) => {
+const PullDownScrollView = (
+  props: PropsWithChildren<PullDownScrollViewProps>
+) => {
+  const { children, onRefresh, isRefreshing = false } = props;
+
   const scrollY = useSharedValue(0);
   const pullDown = useSharedValue(0);
   const refreshOffset = useSharedValue(-100);
@@ -47,7 +54,10 @@ const PullDownScrollView = ({
         runOnJS(onRefresh)();
       }
       pullDown.value = withTiming(0, { duration: 250, easing: Easing.linear });
-      refreshOffset.value = withTiming(0, { duration: 240, easing: Easing.linear });
+      refreshOffset.value = withTiming(0, {
+        duration: 240,
+        easing: Easing.linear,
+      });
     });
 
   const composedGesture = Gesture.Simultaneous(onScroll, onGesture);
@@ -67,15 +77,15 @@ const PullDownScrollView = ({
     return {
       transform: [
         {
-          translateY: refreshOffset.value
+          translateY: refreshOffset.value,
         },
       ],
-      opacity: isRefreshing ? 1 : 1 - 20 / pullDown.value,
+      opacity: isRefreshing ? 1 : Math.max(0, 1 - 20 / pullDown.value),
       position: isRefreshing ? "relative" : "absolute",
     };
   });
 
-  const onScrollView = (event: any) => {
+  const onScrollView = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollY.value = event.nativeEvent.contentOffset.y;
   };
 
@@ -99,7 +109,8 @@ const PullDownScrollView = ({
             style={[styles.scrollView, animatedScrollStyles]}
             onScroll={onScrollView}
             scrollEventThrottle={16}
-            bounces={false} // Disabled iOS bounce effect for consistency
+            // Disabled iOS bounce effect for consistency
+            bounces={false}
           >
             {children}
           </Animated.ScrollView>
@@ -130,7 +141,7 @@ const styles = StyleSheet.create({
   },
   refreshIndicatorAnimationContainer: {
     position: "absolute",
-    transform: "translateY(-100%)",
+    transform: [{ translateY: -100 }],
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
