@@ -69,6 +69,7 @@ const PullDownScrollView = (
           translateY: pullDown.value,
         },
       ],
+      flexGrow: 1,
       overflow: pullDown.value ? "hidden" : "scroll",
     };
   });
